@@ -1,63 +1,99 @@
-console.log("game started");
-
+const Game = {};
+let gameCreate;
 const config = {
   type: Phaser.AUTO,
-  width: 1000,
-  height: 800,
+  width: 800,
+  height: 600,
   physics: {
-    default: "arcade",
-    arcade: {
-      gravity: { y: 300 },
-      debug: false
-    }
+    default: "arcade"
+  },
+  scene: {
+    preload: preload,
+    create: create,
+    update: update
   }
-  //   scene: {
-  //     preload: preload,
-  //     create: create,
-  //     update: update
-  //   }
 };
-const Game = {};
 const game = new Phaser.Game(config);
+let playerMap = [];
 
-Game.preload = function() {
+function preload() {
   console.log("preload");
   this.load.image("sky", "assets/sky.png");
+  this.load.image("bomb", "assets/bomb.png");
   this.load.spritesheet("dude", "assets/dude.png", {
     frameWidth: 32,
     frameHeight: 48
   });
-};
-let player;
-Game.create = function() {
-  console.log("create");
-  game.add.image(200, 0, "sky");
-  game.add.image(200, 200, "sky");
-  game.add.image(0, 0, "sky");
-  game.add.image(0, 200, "sky");
-  console.log(this.physics);
-  player = this.physics.add.sprite(100, 450, "dude");
-  anims.create({
+}
+
+function create() {
+  gameCreate = this;
+  console.log("onCreate");
+  this.add.image(400, 300, "sky");
+  bomb = this.add.image(100, 100, "bomb");
+  bomb.setScale(0.25);
+  bomb.visible = false;
+
+  Client.askNewPlayer();
+
+  this.input.keyboard.on("keydown-T", Client.sendTest, this);
+  this.anims.create({
     key: "left",
-    frames: anims.generateFrameNumbers("player", { start: 0, end: 3 }),
+    frames: this.anims.generateFrameNumbers("dude", { start: 0, end: 3 }),
     frameRate: 10,
-    repeat: -1
+    repeat: 0
   });
-  anims.create({
+  this.anims.create({
     key: "right",
-    frames: anims.generateFrameNumbers("player", { start: 5, end: 8 }),
+    frames: this.anims.generateFrameNumbers("dude", { start: 5, end: 8 }),
     frameRate: 10,
-    repeat: -1
+    repeat: 0
   });
-  anims.create({
+  this.anims.create({
     key: "turn",
-    frames: [{ key: "player", frame: 4 }],
+    frames: [{ key: "dude", frame: 4 }],
     frameRate: 20
   });
+}
+
+function update() {
+  const cursors = this.input.keyboard.createCursorKeys();
+  const movementSpeed = 2;
+
+  if (cursors.space.isDown) {
+    bomb.x = player.x;
+    bomb.y = player.y;
+    bomb.visible = true;
+  }
+
+  handleClick(cursors);
+}
+function handleClick({ left, right, up, down }) {
+  if (left.isDown || right.isDown || up.isDown || down.isDown)
+    Client.sendClick({
+      x: right.isDown - left.isDown,
+      y: down.isDown - up.isDown
+    });
+}
+
+const movePlayer = ({ id, x, y }) => {
+  const player = playerMap[id];
+  const xDiff = player.x - x;
+  if (!!xDiff) player.anims.play(xDiff > 0 ? "left" : "right", true);
+  else player.anims.play("turn", true);
+
+  player.x = x;
+  player.y = y;
 };
-Game.update = function() {
-  console.log("update");
+
+const addNewPlayer = ({ id, x, y }) => {
+  console.log("addNewPlayer", id);
+  playerMap[id] = gameCreate.physics.add.sprite(x, y, "dude");
 };
-console.log(game);
-game.state.add("Game", Game);
-// game.state.start("Game");
+
+const removePlayer = ({ id }) => {
+  if (playerMap[id]) {
+    playerMap[id].destroy();
+    delete playerMap[id];
+  }
+};
