@@ -20,6 +20,11 @@ function preload() {
   console.log("preload");
   this.load.image("sky", "assets/sky.png");
   this.load.image("bomb", "assets/bomb.png");
+  this.load.bitmapFont(
+    "carrier_command",
+    "assets/carrier_command.png",
+    "assets/carrier_command.xml"
+  );
   this.load.spritesheet("dude", "assets/dude.png", {
     frameWidth: 32,
     frameHeight: 48
@@ -29,6 +34,12 @@ function preload() {
 function create() {
   gameCreate = this;
   console.log("onCreate");
+  try {
+    Client.sendTest();
+  } catch (e) {
+    this.add.bitmapText(60, 100, "carrier_command", "Connection error!", 34);
+    return;
+  }
   this.add.image(400, 300, "sky");
   bomb = this.add.image(100, 100, "bomb");
   bomb.setScale(0.25);
@@ -37,34 +48,36 @@ function create() {
   Client.askNewPlayer();
 
   this.input.keyboard.on("keydown-T", Client.sendTest, this);
-  this.anims.create({
+  createAnims({ anims: this.anims });
+}
+const createAnims = ({ anims }) => {
+  anims.create({
     key: "left",
-    frames: this.anims.generateFrameNumbers("dude", { start: 0, end: 3 }),
+    frames: anims.generateFrameNumbers("dude", { start: 0, end: 3 }),
     frameRate: 10,
     repeat: 0
   });
-  this.anims.create({
+  anims.create({
     key: "right",
-    frames: this.anims.generateFrameNumbers("dude", { start: 5, end: 8 }),
+    frames: anims.generateFrameNumbers("dude", { start: 5, end: 8 }),
     frameRate: 10,
     repeat: 0
   });
-  this.anims.create({
+  anims.create({
     key: "turn",
     frames: [{ key: "dude", frame: 4 }],
     frameRate: 20
   });
-}
+};
 
 function update() {
   const cursors = this.input.keyboard.createCursorKeys();
-  const movementSpeed = 2;
 
-  if (cursors.space.isDown) {
-    bomb.x = player.x;
-    bomb.y = player.y;
-    bomb.visible = true;
-  }
+  // if (cursors.space.isDown) {
+  //   bomb.x = player.x;
+  //   bomb.y = player.y;
+  //   bomb.visible = true;
+  // }
 
   handleClick(cursors);
 }
