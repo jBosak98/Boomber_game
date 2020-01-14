@@ -15,6 +15,8 @@ const config = {
 };
 const game = new Phaser.Game(config);
 let playerMap = [];
+let bombs = [];
+let me = undefined;
 
 function preload() {
   console.log("preload");
@@ -46,10 +48,13 @@ function create() {
   bomb.visible = false;
 
   Client.askNewPlayer();
-
+  Client.whoAmI();
   this.input.keyboard.on("keydown-T", Client.sendTest, this);
   createAnims({ anims: this.anims });
 }
+const whoAmI = player => {
+  me = player.id;
+};
 const createAnims = ({ anims }) => {
   anims.create({
     key: "left",
@@ -73,11 +78,9 @@ const createAnims = ({ anims }) => {
 function update() {
   const cursors = this.input.keyboard.createCursorKeys();
 
-  // if (cursors.space.isDown) {
-  //   bomb.x = player.x;
-  //   bomb.y = player.y;
-  //   bomb.visible = true;
-  // }
+  if (cursors.space.isDown) {
+    Client.putBomb();
+  }
 
   handleClick(cursors);
 }
@@ -99,11 +102,29 @@ const movePlayer = ({ id, x, y }) => {
   player.y = y;
 };
 
+const addNewBomb = ({ id, x, y }) => {
+  bombs[id] = gameCreate.physics.add.sprite(x, y, "bomb");
+  bombs[id].setScale(0.3);
+};
 const addNewPlayer = ({ id, x, y }) => {
-  console.log("addNewPlayer", id);
   playerMap[id] = gameCreate.physics.add.sprite(x, y, "dude");
 };
 
+const bombExplosion = (bomb, players) => {
+  bombs[bomb.id].visible = false;
+
+  players.forEach(({ id, x, y, hp }) => {
+    playerMap[id].x = x;
+    playerMap[id].y = y;
+    playerMap[id].hp = hp;
+  });
+  if (playerMap[me].hp <= 0) gameOver();
+};
+
+const gameOver = () => {
+  gameCreate.add.bitmapText(60, 100, "carrier_command", "GAME OVER!", 34);
+  Client.socket.disconnect();
+};
 const removePlayer = ({ id }) => {
   if (playerMap[id]) {
     playerMap[id].destroy();
