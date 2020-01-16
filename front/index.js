@@ -31,6 +31,10 @@ function preload() {
     frameWidth: 32,
     frameHeight: 48
   });
+  this.load.image("bomb_explosion_3", "assets/tank_explosion3.png");
+  this.load.image("bomb_explosion_2", "assets/tank_explosion2.png");
+  this.load.image("bomb_explosion_4", "assets/tank_explosion4.png");
+  this.load.image("green_circle", "assets/green_circle.png");
 }
 
 function create() {
@@ -52,8 +56,12 @@ function create() {
   this.input.keyboard.on("keydown-T", Client.sendTest, this);
   createAnims({ anims: this.anims });
 }
-const whoAmI = player => {
-  me = player.id;
+const whoAmI = ({ x, y, id }) => {
+  me = id;
+  const greenCircle = gameCreate.physics.add.sprite(x, y, "green_circle");
+  setTimeout(() => {
+    greenCircle.visible = false;
+  }, 500);
 };
 const createAnims = ({ anims }) => {
   anims.create({
@@ -110,8 +118,45 @@ const addNewPlayer = ({ id, x, y }) => {
   playerMap[id] = gameCreate.physics.add.sprite(x, y, "dude");
 };
 
-const bombExplosion = (bomb, players) => {
-  bombs[bomb.id].visible = false;
+const bombExplosion = async (bomb, players) => {
+  const explodedBomb = bombs[bomb.id];
+  explodedBomb.visible = false;
+
+  const explosions = [
+    { x: -50, y: 0, sprite: "bomb_explosion_2" },
+    { x: 50, y: 0, sprite: "bomb_explosion_2" },
+    { x: 75, y: 0, sprite: "bomb_explosion_2" },
+    { x: -75, y: 0, sprite: "bomb_explosion_2" },
+    { x: -100, y: 0, sprite: "bomb_explosion_2" },
+    { x: 100, y: 0, sprite: "bomb_explosion_2" },
+    { x: 125, y: 0, sprite: "bomb_explosion_2" },
+    { x: -125, y: 0, sprite: "bomb_explosion_2" },
+    { x: 0, y: 50, sprite: "bomb_explosion_2" },
+    { x: 0, y: -50, sprite: "bomb_explosion_2" },
+    { x: 0, y: 75, sprite: "bomb_explosion_2" },
+    { x: 0, y: -75, sprite: "bomb_explosion_2" },
+    { x: 0, y: 100, sprite: "bomb_explosion_2" },
+    { x: 0, y: -100, sprite: "bomb_explosion_2" },
+    { x: 0, y: 125, sprite: "bomb_explosion_2" },
+    { x: 0, y: -125, sprite: "bomb_explosion_2" },
+    { x: 0, y: 25, sprite: "bomb_explosion_3" },
+    { x: 0, y: -25, sprite: "bomb_explosion_3" },
+    { x: 25, y: 0, sprite: "bomb_explosion_3" },
+    { x: -25, y: 0, sprite: "bomb_explosion_3" },
+    { x: 0, y: 0, sprite: "bomb_explosion_4" }
+  ].map(({ x, y, sprite }) =>
+    gameCreate.physics.add.sprite(
+      explodedBomb.x + x,
+      explodedBomb.y + y,
+      sprite
+    )
+  );
+
+  setTimeout(() => {
+    explosions.forEach(e => {
+      e.visible = false;
+    });
+  }, 500);
 
   players.forEach(({ id, x, y, hp }) => {
     playerMap[id].x = x;

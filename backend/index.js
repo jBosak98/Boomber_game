@@ -57,8 +57,8 @@ const refreshBombs = async ({ bomb, socket }) => {
     bomb.expired = true;
     const players = getAllPlayers().map(p => {
       if (
-        (Math.abs(bomb.x - p.x) < 150 && Math.abs(bomb.y - p.y) < 12.5) ||
-        (Math.abs(bomb.y - p.y) < 150 && Math.abs(bomb.x - p.x) < 12.5)
+        (Math.abs(bomb.x - p.x) < 100 && Math.abs(bomb.y - p.y) < 12.5) ||
+        (Math.abs(bomb.y - p.y) < 100 && Math.abs(bomb.x - p.x) < 12.5)
       )
         p.hp -= 100;
       return p;
